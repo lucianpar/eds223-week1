@@ -4,4 +4,69 @@ format: html
 editor: visual
 ---
 
-## 
+```{r}
+library(here)
+library(terra)
+library(tidyverse) 
+library(stars) 
+library(sf) 
+library(tmap) 
+library(conflicted)
+```
+
+```{r}
+ei_points <- sf::read_sf(here::here("data", "easter_island", "ei_points.gpkg"))
+# subset points to volcanoes
+volcanoes <- subset(ei_points, type == "volcano")
+
+# read in island elevation
+ei_elev <- terra::rast(here::here("data", "easter_island", "ei_elev.tif"))
+
+# read in island border
+ei_borders <- sf::read_sf(here::here("data", "easter_island", "ei_border.gpkg"))
+
+# read in island road network
+ei_roads <- sf::read_sf(here::here("data", "easter_island", "ei_roads.gpkg"))
+
+# read in bathymetry
+ei_bathymetry <- terra::rast("/Users/lucian/Desktop/R materials/Eds223-week1/data/ei_bathy.tif")
+
+# read in seamounts
+ei_seamounts <- sf::read_sf("/Users/lucian/Desktop/R materials/Eds223-week1/data/ei_seamounts.gpkg")
+
+```
+
+```{r}
+tmap_mode("view")
+#tmap_mode("plot")
+
+# define larger plot bbox that is buffered around both of 
+# the two largest layers to display all 4 seamounts in view 
+
+bbox_seamount <- st_bbox(ei_seamounts) # seamount bounding box
+bbox_bathymetry <- st_bbox(ei_bathymetry) # bathymetry bounding box
+bbox_largest <- st_bbox(c(xmin = min(bbox_bathymetry[1], bbox_seamount[1]),
+                         ymin = min(bbox_bathymetry[2], bbox_seamount[2]),
+                         xmax = max(bbox_bathymetry[3], bbox_seamount[3]),
+                         ymax = max(bbox_bathymetry[4], bbox_seamount[4])))
+
+
+tm_shape(ei_elev) +
+  tm_raster(title = "Elevation (Meters)") +
+tm_shape(ei_bathymetry) + 
+  tm_raster(title = "Bathymetry (Meters)" ) + 
+tm_shape(volcanoes) +
+  tm_symbols(shape = 24, col = "red") + 
+tm_shape(ei_roads) + 
+  tm_lines() + 
+tm_shape(ei_borders) +
+  tm_borders() + 
+  tm_compass(position = c("right", "top")) +
+  tm_scale_bar() +
+tm_shape(ei_seamounts) + 
+  tm_bubbles(col = "blue")
+```
+
+```{r}
+
+```
