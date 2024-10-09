@@ -10,6 +10,7 @@ library(terra)
 library(tidyverse) 
 library(stars) 
 library(sf) 
+library(sp)
 library(tmap) 
 library(conflicted)
 ```
@@ -68,5 +69,75 @@ tm_shape(ei_seamounts) +
 ```
 
 ```{r}
+# Read in geodatabase of EJScreen data at the Census Block Group level
+ejscreen <- sf::st_read(here::here("data", "ejscreen","EJSCREEN_2023_BG_StatePct_with_AS_CNMI_GU_VI.gdb")) 
 
+class(ejscreen)
+
+california <- ejscreen %>%
+  dplyr::filter(ST_ABBREV == "CA") 
+
+tm_shape(california) + 
+  tm_fill()
+
+
+#tmap_options(check.and.fix = TRUE)
+#st_ejscreen<- ejscreen %>%
+ # st_as_sf(coords = c("lon", "lat"), crs = 4326)  # Use the appropriate CRS
+
+#summary(st_ejscreen)
+
+# Filter to a state you are interested in
+california <- st_ejscreen %>%
+  dplyr::filter(ST_ABBREV == "CA") 
+
+tm_shape(california) + 
+  tm_fill() # this worked
+
+colnames(california)
+
+unique(california$CNTY_NAME)
+
+# Filter to a county you are interested in
+#this isnt working 
+Alameda <- california %>%
+  dplyr::filter(CNTY_NAME == "Alameda County")
+
+tmap_mode("view")
+tm_shape(Alameda) + 
+  tm_fill( 
+    col = "LOWINCOME",  #column         
+    palette = "Reds",  #color style        
+    #style = "quantile",        
+    title = "Low Income %") + #column title
+  tm_dots(
+    col = "P_CANCER",
+    title = "Air Toxics Cancer Risk") +
+  tm_layout(main.title = "Oakland / Alameda")
+
+
+```
+
+This map communicates overlap in Air Toxic cancer risk and Low income areas in Oakland / Alameda country CA.
+
+```{}
+```
+
+```{r}
+
+```
+
+`{# find the average values for all variables within counties} #california_counties <- aggregate(california, by = list(california$CNTY_NAME), FUN = mean)`
+
+```{r}
+
+tm_shape(california) + 
+  tm_fill( 
+    col = "D2_PTSDF",  #column         
+    palette = "Reds",  #color style        
+    title = "Hazardous Waste") + #column title
+  tm_fill(
+    col = "PEOPCOLORPCT",
+    palette = "Greens",
+    title = "People of color")
 ```
